@@ -1,6 +1,53 @@
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.pyc
 *.pyo
+
+# Logs and output
 *.log
 output/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Virtual environments
 .env
+venv/
+.venv/
+
+# IDE configurations
+.idea/
+.vscode/
+
+# Mac OS files
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Linux generated files
+*.swp
+.swo
+.swn
+
+# Windows generated files
+*.lnk
+
+# Python egg and build artifacts
+*.egg-info/
+dist/
+build/
+
+# Coverage reports
+htmlcov/
+.coverage
+coverage.xml
+.cache
+
+# Test results
+.pytest_cache/
+.tox/
+
+# Application-specific
+logs/
