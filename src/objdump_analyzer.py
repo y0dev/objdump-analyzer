@@ -39,7 +39,7 @@ class ObjdumpAnalyzer:
         logging.info(f"Registers: {', '.join(self.registers) if self.registers else 'None'}")
         logging.info(f"Output directory set to: {self.output_dir}")
 
-    def log_elf_size(self):
+    def get_elf_size(self):
         """
         Runs the `size` command on the ELF or object file and logs the result.
 
@@ -47,6 +47,8 @@ class ObjdumpAnalyzer:
         text	   data	    bss	    dec	    hex	filename
         1234	   567	    89	    1890	762	test.elf
         """
+        summary_path = os.path.join(self.output_dir, "summary.txt")
+
         try:
             result = subprocess.run(
                 [self.architecture + 'size', self.obj_file],
@@ -57,6 +59,12 @@ class ObjdumpAnalyzer:
             )
 
             logging.info("ELF Size Report:\n" + result.stdout.strip())
+
+            # Write the result to summary file
+            with open(summary_path, "a") as f:
+                f.write("=== ELF Size Report ===\n")
+                f.write(result.stdout.strip() + "\n\n")
+
             return result.stdout.strip()
 
         except subprocess.CalledProcessError as e:

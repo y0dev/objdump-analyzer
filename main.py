@@ -49,6 +49,8 @@ def main():
 
     # Instantiate the analyzer
     analyzer = ObjdumpAnalyzer(obj_file, arch, registers)
+    analyzer.get_elf_size()
+    
     # Determine output directory and file path
     output_file_path = os.path.join(analyzer.output_dir, "objdump.txt")
     summary_file_path = os.path.join(analyzer.output_dir, "symbol_summary.txt")
@@ -63,7 +65,7 @@ def main():
     # Analyze function sizes
     function_sizes = analyzer.analyze_function_sizes(disassembly_lines)
     if function_sizes:
-        with open(summary_file_path, "w") as out_file:
+        with open(summary_file_path, "a") as out_file:
             out_file.write("=== Function Sizes ===\n")
             for f in function_sizes:
                 out_file.write(f"{f['name']}: {f['size']} bytes (0x{f['start']} - 0x{f['end']})\n")
