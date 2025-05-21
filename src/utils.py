@@ -1,6 +1,8 @@
 import os
 
-def ensure_directories():
-    """Ensure output and log directories exist."""
-    os.makedirs('output', exist_ok=True)
-    os.makedirs('logs', exist_ok=True)
+def ensure_directories(directories=None):
+    """Ensure directories exist."""
+    if not directories:
+        return
+    for d in directories:
+        os.makedirs(d, exist_ok=True)

@@ -1,14 +1,25 @@
-import click
+# In main.py or wherever main() is defined
+import argparse
+import json
 from src.objdump_analyzer import ObjdumpAnalyzer
 
-@click.command()
-@click.option('--file', '-f', required=True, help='Path to the object file.')
-@click.option('--arch', '-a', required=True, help='Objdump architecture (e.g., riscv-objdump, arm32-objdump).')
-@click.option('--register', '-r', multiple=True, help='Filter disassembly by registers.')
-def main(file, arch, register):
-    """ Main entry point for Objdump Analyzer """
-    analyzer = ObjdumpAnalyzer(file, arch, list(register))
-    analyzer.run_objdump()
+def main():
+    parser = argparse.ArgumentParser(description='Objdump Analyzer CLI')
+    parser.add_argument('--file', '-f', required=True, help='Path to the object file')
+    parser.add_argument('--arch', '-a', help='Objdump binary (e.g., riscv-objdump)')
+    parser.add_argument('--register', '-r', nargs='*', help='Registers to filter by')
+    parser.add_argument('--config', help='Path to JSON config file')
 
-if __name__ == '__main__':
-    main()
+    args = parser.parse_args()
+
+    config = {}
+    if args.config:
+        with open(args.config) as f:
+            config = json.load(f)
+
+    obj_file = args.file
+    arch = args.arch or config.get('arch', 'objdump')
+    registers = args.register or config.get('registers', [])
+
+    analyzer = ObjdumpAnalyzer(obj_file, arch, registers)
+    analyzer.run_objdump()
