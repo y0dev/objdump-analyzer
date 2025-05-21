@@ -1,7 +1,9 @@
 import os
 import re
-import subprocess
+import shutil
 import logging
+import subprocess
+from datetime import datetime
 from src.parser import ObjdumpParser
 from src.utils import ensure_directories
 
@@ -11,15 +13,35 @@ class ObjdumpAnalyzer:
         self.architecture = architecture
         self.registers = registers
         self.parser = ObjdumpParser(registers)
-        ensure_directories(['logs','output'])
+
+        # Create timestamped output directory
+        now = datetime.now()
+        date_part = now.strftime("%m_%d_%Y")
+        time_part = now.strftime("%H_%M_%S")
+        base_name = os.path.splitext(os.path.basename(self.obj_file))[0]
+        self.output_dir = os.path.join("output", date_part, f"{base_name}_{time_part}")
+
+        # Ensure the output and log directories exist
+        ensure_directories(['logs', self.output_dir])
+
+        # Copy the original object/ELF file to the output directory
+        try:
+            shutil.copy2(self.obj_file, os.path.join(self.output_dir, os.path.basename(self.obj_file)))
+        except FileNotFoundError:
+            logging.error(f"Input file not found: {self.obj_file}")
+        except Exception as e:
+            logging.error(f"Failed to copy input file to output directory: {e}")
+        
+        
+        logging.info(f"Initialized ObjdumpAnalyzer for: {self.obj_file}")
+        logging.info(f"Architecture: {self.architecture}")
+        logging.info(f"Registers: {', '.join(self.registers) if self.registers else 'None'}")
+        logging.info(f"Output directory set to: {self.output_dir}")
 
     def run_objdump(self):
         """Execute objdump and stream the output for efficient parsing."""
         try:
-            base_name = os.path.splitext(os.path.basename(self.obj_file))[0]
-            output_dir = os.path.join("output", base_name)
-            os.makedirs(output_dir, exist_ok=True)
-            output_file_path = os.path.join(output_dir, "objdump.txt")
+            output_file_path = os.path.join(self.output_dir, "objdump.txt")
 
             logging.info(f"Running objdump for {self.obj_file} with arch {self.architecture}")
             logging.info(f"Writing output to: {output_file_path}")
@@ -44,6 +66,36 @@ class ObjdumpAnalyzer:
         except Exception as e:
             logging.error(f"Error running objdump: {e}")
 
+    def gen_symbol_table(self):
+        """Generate a symbol table using objdump -t and store it in output/ directory."""
+        try:
+            symbol_file_path = os.path.join(self.output_dir, "symbols.txt")
+
+            logging.info(f"Generating symbol table for {self.obj_file}")
+            logging.info(f"Writing symbol table to: {symbol_file_path}")
+
+            with open(symbol_file_path, 'w') as sym_file:
+                process = subprocess.run(
+                    [self.architecture, '-t', self.obj_file],
+                    stdout=sym_file,
+                    stderr=subprocess.PIPE,
+                    text=True
+                )
+
+            if process.stderr:
+                logging.warning("Warnings or errors during symbol table generation:")
+                logging.warning(process.stderr.strip())
+
+            return symbol_file_path
+
+        except FileNotFoundError:
+            logging.error(f"Error: {self.obj_file} not found.")
+            return None
+        except Exception as e:
+            logging.error(f"Error generating symbol table: {e}")
+            return None
+
+        
 
     def analyze_function_sizes(self, disassembly_lines):
         """

@@ -1,6 +1,6 @@
 {
   "output_directory": "output",
   "log_directory": "logs",
-  "architecture": "riscv-objdump",
-  "objdump_options": ["-x", "-d"]
+  "arch": "arm-none-eabi-objdump",
+  "registers": ["sp", "pc"]
 }
