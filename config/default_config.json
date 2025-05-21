@@ -1,6 +1,4 @@
 {
-  "output_directory": "output",
-  "log_directory": "logs",
   "arch": "arm-none-eabi-objdump",
   "registers": ["sp", "pc"]
 }
