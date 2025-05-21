@@ -1,4 +1,4 @@
 {
-  "arch": "arm-none-eabi-objdump",
+  "arch": "arm-none-eabi-",
   "registers": ["sp", "pc"]
 }

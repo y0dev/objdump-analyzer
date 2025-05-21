@@ -64,9 +64,9 @@ def main():
     function_sizes = analyzer.analyze_function_sizes(disassembly_lines)
     if function_sizes:
         with open(summary_file_path, "w") as out_file:
-            out_file.write("=== Function Sizes ===")
+            out_file.write("=== Function Sizes ===\n")
             for f in function_sizes:
-                out_file.write(f"{f['name']}: {f['size']} bytes (0x{f['start']} - 0x{f['end']})")
+                out_file.write(f"{f['name']}: {f['size']} bytes (0x{f['start']} - 0x{f['end']})\n")
     
     symbol_path = analyzer.gen_symbol_table()
     if symbol_path:

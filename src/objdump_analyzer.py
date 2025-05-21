@@ -12,7 +12,6 @@ class ObjdumpAnalyzer:
         self.obj_file = obj_file
         self.architecture = architecture
         self.registers = registers
-        self.parser = ObjdumpParser(registers)
 
         # Create timestamped output directory
         now = datetime.now()
@@ -23,6 +22,8 @@ class ObjdumpAnalyzer:
 
         # Ensure the output and log directories exist
         ensure_directories(['logs', self.output_dir])
+
+        self.parser = ObjdumpParser(self.output_dir, registers)
 
         # Copy the original object/ELF file to the output directory
         try:
@@ -38,6 +39,33 @@ class ObjdumpAnalyzer:
         logging.info(f"Registers: {', '.join(self.registers) if self.registers else 'None'}")
         logging.info(f"Output directory set to: {self.output_dir}")
 
+    def log_elf_size(self):
+        """
+        Runs the `size` command on the ELF or object file and logs the result.
+
+        Logs the output in the format:
+        text	   data	    bss	    dec	    hex	filename
+        1234	   567	    89	    1890	762	test.elf
+        """
+        try:
+            result = subprocess.run(
+                [self.architecture + 'size', self.obj_file],
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True
+            )
+
+            logging.info("ELF Size Report:\n" + result.stdout.strip())
+            return result.stdout.strip()
+
+        except subprocess.CalledProcessError as e:
+            logging.error(f"Error running size on {self.obj_file}: {e.stderr.strip()}")
+            return None
+        except FileNotFoundError:
+            logging.error("The `size` command was not found. Please install binutils.")
+            return None
+
     def run_objdump(self):
         """Execute objdump and stream the output for efficient parsing."""
         try:
@@ -48,7 +76,7 @@ class ObjdumpAnalyzer:
 
             with open(output_file_path, 'w') as out_file:
                 process = subprocess.Popen(
-                    [self.architecture, '-x', '-d', self.obj_file],
+                    [self.architecture + 'objdump', '-x', '-d', self.obj_file],
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                     text=True
@@ -56,6 +84,7 @@ class ObjdumpAnalyzer:
                 for line in process.stdout:
                     out_file.write(line)
                     self.parser.parse_line(line)
+                self.parser.close()
 
                 # Optionally log stderr
                 for err_line in process.stderr:
@@ -76,7 +105,7 @@ class ObjdumpAnalyzer:
 
             with open(symbol_file_path, 'w') as sym_file:
                 process = subprocess.run(
-                    [self.architecture, '-t', self.obj_file],
+                    [self.architecture + 'objdump', '-t', self.obj_file],
                     stdout=sym_file,
                     stderr=subprocess.PIPE,
                     text=True
